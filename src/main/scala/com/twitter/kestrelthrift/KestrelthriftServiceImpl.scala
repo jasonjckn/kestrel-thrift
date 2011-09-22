@@ -16,6 +16,11 @@ import com.twitter.finagle.{Service}
 class KestrelthriftServiceImpl(qs: QueueCollection) extends KestrelthriftService{
   println("New Connection")
 
+  def release() {
+  println("Close Connection")
+
+  }
+
   def get(queueName: String, transaction: Boolean) = {
     qs.remove(queueName, None, transaction).map { item =>
       item match {

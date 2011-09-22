@@ -20,11 +20,12 @@ import config._
 import net.lag.kestrel.config._
 import com.twitter.kestrelthrift.thrift.KestrelthriftService.ServiceIface
 
-class KestrelthriftService3(val iface: ServiceIface, val protocolFactory: TProtocolFactory) 
-    extends com.twitter.kestrelthrift.thrift.KestrelthriftService.Service(iface, protocolFactory) {
+class KestrelthriftService3(val impl: KestrelthriftServiceImpl, val protocolFactory: TProtocolFactory) 
+    extends com.twitter.kestrelthrift.thrift.KestrelthriftService.Service(impl.toThrift, protocolFactory) {
     
     override def release() {
-        println("Closed connection")
+        impl.release()
+        super.release()
     }
 }
 
@@ -51,10 +52,7 @@ class KestrelthriftServiceServer2(config: KestrelthriftServiceConfig) extends Se
                             .name(serverName)
                             .reportTo(new OstrichStatsReceiver)
                             .bindTo(serverAddr).build(() => {
-        //new com.twitter.kestrelthrift.thrift.KestrelthriftService.Service(
-        new KestrelthriftService3(
-        (new KestrelthriftServiceImpl(qs)).toThrift, 
-        thriftProtocolFactory)
+        new KestrelthriftService3(new KestrelthriftServiceImpl(qs),thriftProtocolFactory)
     })
   }
 
