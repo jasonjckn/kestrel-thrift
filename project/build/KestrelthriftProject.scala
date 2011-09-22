@@ -22,6 +22,7 @@ class KestrelthriftProject(info: ProjectInfo) extends StandardServiceProject(inf
   val finagleC = "com.twitter" % "finagle-core" % finagleVersion
   val finagleT = "com.twitter" % "finagle-thrift" % finagleVersion
   val finagleO = "com.twitter" % "finagle-ostrich4" % finagleVersion
+  val kestrel = "net.lag" % "kestrel" % "2.1.0"
 
   // thrift
   val libthrift = "thrift" % "libthrift" % "0.5.0"

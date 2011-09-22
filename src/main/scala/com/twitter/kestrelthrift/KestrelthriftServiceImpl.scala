@@ -1,45 +1,52 @@
 package com.twitter.kestrelthrift
 
-import java.util.concurrent.Executors
-import scala.collection.mutable
+import scala.collection.mutable.Map
+import scala.collection.Set
 import com.twitter.util._
 import config._
+import net.lag.kestrel._
+import net.lag.kestrel.config._
+import java.nio.ByteBuffer
 
 class KestrelthriftServiceImpl(config: KestrelthriftServiceConfig) extends KestrelthriftServiceServer {
   val serverName = "Kestrelthrift"
   val thriftPort = config.thriftPort
 
-  /**
-   * These services are based on finagle, which implements a nonblocking server.  If you
-   * are making blocking rpc calls, it's really important that you run these actions in
-   * a thread pool, so that you don't block the main event loop.  This thread pool is only
-   * needed for these blocking actions.  The code looks like:
-   *
-   *     // Depends on com.twitter.util >= 1.6.10
-   *     val futurePool = new FuturePool(Executors.newFixedThreadPool(config.threadPoolSize))
-   *
-   *     def hello() = futurePool {
-   *       someService.blockingRpcCall
-   *     }
-   *
-   */
+  //val dataDir = "/var/spool/kestrel"
+  val dataDir = "./data" // TODO: move to config
+  // TODO: commit
+  // TODO: batch get
 
-  val database = new mutable.HashMap[String, String]()
+  val qs = new QueueCollection(dataDir, new FakeTimer(), new QueueBuilder().apply(), List())
 
-  def get(key: String) = {
-    database.get(key) match {
-      case None =>
-        log.debug("get %s: miss", key)
-        Future.exception(new KestrelthriftException("No such key"))
-      case Some(value) =>
-        log.debug("get %s: hit", key)
-        Future(value)
+  def get(queueName: String, maxItems: Int, transaction: Boolean) = {
+    val future = qs.remove(queueName, None, transaction)
+    future.map { item =>
+      item match {
+        case None => List()
+        case Some(item) => List(new Item(ByteBuffer.wrap(item.data), item.xid))
+      }
     }
   }
 
-  def put(key: String, value: String) = {
-    log.debug("put %s", key)
-    database(key) = value
+  def put(queueName: String, items: Seq[ByteBuffer]) = {
+    for(i <- items) 
+        qs.add(queueName, i.array)
     Future.void
   }
+  def ack(queueName: String, xids: Set[Int]) = {
+    for(id <- xids) 
+      qs.confirmRemove(queueName, id)
+    Future.void
+  }
+  def fail(queueName: String, xids: Set[Int]) = {
+    for(id <- xids) 
+      qs.unremove(queueName, id)
+    Future.void
+  }
+  def flush(queueName: String) = {
+    qs.flush(queueName)
+    Future.void
+  }
+
 }
