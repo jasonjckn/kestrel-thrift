@@ -15,7 +15,8 @@ struct Item {
  * You should replace this with your actual service.
  */
 service KestrelthriftService {
-  list<Item> get(1: string queue_name, 2: i32 max_items, 3: bool transaction)  // max items always = 1.
+  Item get(1: string queue_name, 2: bool transaction = 0)
+  list<Item> multiget(1: string queue_name, 2: i32 max_items = 1, 3: bool transaction = 0)
   void put(1: string queue_name, 2: list<binary> items)
   void ack(1: string queue_name, 2: set<i32> xids)
   void fail(1: string queue_name, 2: set<i32> xids)

@@ -19,7 +19,16 @@ class KestrelthriftServiceImpl(config: KestrelthriftServiceConfig) extends Kestr
   val qs = new QueueCollection("<ignored>", new NettyTimer(timer), new QueueBuilder().apply(), List())
   qs.loadQueues()
 
-  def get(queueName: String, maxItems: Int, transaction: Boolean) = {
+  def get(queueName: String, transaction: Boolean) = {
+    qs.remove(queueName, None, transaction).map { item =>
+      item match {
+        case None => null
+        case Some(item) => new Item(ByteBuffer.wrap(item.data), item.xid)
+      }
+    }
+  }
+
+  def multiget(queueName: String, maxItems: Int, transaction: Boolean) = {
     val futureList = for(i <- 1 to maxItems) 
       yield qs.remove(queueName, None, transaction).map { item =>
             item match {
