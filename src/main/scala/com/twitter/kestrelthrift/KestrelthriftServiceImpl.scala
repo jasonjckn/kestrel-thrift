@@ -9,15 +9,14 @@ import net.lag.kestrel.config._
 import java.nio.ByteBuffer
 import java.util.concurrent.{TimeUnit}
 import org.jboss.netty.util.{HashedWheelTimer, Timeout, Timer, TimerTask}
+import com.twitter.finagle.{Service}
 
-class KestrelthriftServiceImpl(config: KestrelthriftServiceConfig) extends KestrelthriftServiceServer {
-  val serverName = "Kestrelthrift"
-  val thriftPort = config.thriftPort
+class KestrelthriftServiceImpl(qs: QueueCollection) extends Service with KestrelthriftService{
 
-  // this means no timeout will be at better granularity than 10ms.
-  val timer = new HashedWheelTimer(10, TimeUnit.MILLISECONDS)
-  val qs = new QueueCollection("<ignored>", new NettyTimer(timer), new QueueBuilder().apply(), List())
-  qs.loadQueues()
+
+  def apply(request: Object): Future[Nothing] = {
+    Nothing()
+  }
 
   def get(queueName: String, transaction: Boolean) = {
     qs.remove(queueName, None, transaction).map { item =>
