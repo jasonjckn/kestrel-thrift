@@ -20,13 +20,15 @@ class KestrelthriftServiceImpl(config: KestrelthriftServiceConfig) extends Kestr
   val qs = new QueueCollection(dataDir, new FakeTimer(), new QueueBuilder().apply(), List())
 
   def get(queueName: String, maxItems: Int, transaction: Boolean) = {
-    val future = qs.remove(queueName, None, transaction)
-    future.map { item =>
-      item match {
-        case None => List()
-        case Some(item) => List(new Item(ByteBuffer.wrap(item.data), item.xid))
-      }
-    }
+    val futureList = for(i <- 1 to maxItems) 
+      yield qs.remove(queueName, None, transaction).map { item =>
+            item match {
+              case None => null
+              case Some(item) => new Item(ByteBuffer.wrap(item.data), item.xid)
+            }
+          }
+    val agg = Future.collect(futureList.toSeq)
+    agg.map(seq => seq.filter(_ != null))
   }
 
   def put(queueName: String, items: Seq[ByteBuffer]) = {
@@ -34,16 +36,19 @@ class KestrelthriftServiceImpl(config: KestrelthriftServiceConfig) extends Kestr
         qs.add(queueName, i.array)
     Future.void
   }
+
   def ack(queueName: String, xids: Set[Int]) = {
     for(id <- xids) 
       qs.confirmRemove(queueName, id)
     Future.void
   }
+
   def fail(queueName: String, xids: Set[Int]) = {
     for(id <- xids) 
       qs.unremove(queueName, id)
     Future.void
   }
+
   def flush(queueName: String) = {
     qs.flush(queueName)
     Future.void
