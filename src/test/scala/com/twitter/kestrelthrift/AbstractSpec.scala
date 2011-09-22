@@ -8,7 +8,7 @@ import com.twitter.conversions.time._
 abstract class AbstractSpec extends Specification {
   val env = RuntimeEnvironment(this, Array("-f", "config/test.scala"))
   lazy val kestrelthrift = {
-    val out = env.loadRuntimeConfig[KestrelthriftService]
+    val out = env.loadRuntimeConfig[KestrelthriftServiceServer2]
 
     // You don't really want the thrift server active, particularly if you
     // are running repetitively via ~test

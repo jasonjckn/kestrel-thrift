@@ -46,6 +46,10 @@ class KestrelthriftServiceServer2(config: KestrelthriftServiceConfig) extends Se
   val qs = new QueueCollection("<ignored>", new NettyTimer(timer), new QueueBuilder().apply(), List())
   qs.loadQueues()
 
+  def newImpl() = {
+    new KestrelthriftServiceImpl(qs)
+  }
+
   def start = {
     val serverAddr = new InetSocketAddress(thriftPort)
     server = ServerBuilder().codec(thriftCodec)
