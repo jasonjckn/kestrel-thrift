@@ -7,6 +7,7 @@ class KestrelthriftServiceSpec extends AbstractSpec {
 
     val testQName = "test234"
 
+  /*
     "set a key, multiget a key" in {
       kestrelthrift.flush(testQName)
       kestrelthrift.put(testQName, ByteBuffer.wrap("bluebird".getBytes))
@@ -58,5 +59,6 @@ class KestrelthriftServiceSpec extends AbstractSpec {
       item = kestrelthrift.get(testQName, false)()
       require(item == null)
     }
+    */
   }
 }

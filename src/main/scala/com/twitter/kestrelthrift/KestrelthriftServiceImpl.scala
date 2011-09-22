@@ -11,12 +11,10 @@ import java.util.concurrent.{TimeUnit}
 import org.jboss.netty.util.{HashedWheelTimer, Timeout, Timer, TimerTask}
 import com.twitter.finagle.{Service}
 
-class KestrelthriftServiceImpl(qs: QueueCollection) extends Service with KestrelthriftService{
 
 
-  def apply(request: Object): Future[Nothing] = {
-    Nothing()
-  }
+class KestrelthriftServiceImpl(qs: QueueCollection) extends KestrelthriftService{
+  println("New Connection")
 
   def get(queueName: String, transaction: Boolean) = {
     qs.remove(queueName, None, transaction).map { item =>

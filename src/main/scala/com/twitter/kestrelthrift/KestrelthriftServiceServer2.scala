@@ -18,6 +18,15 @@ import org.jboss.netty.util.{HashedWheelTimer, Timeout, Timer, TimerTask}
 import net.lag.kestrel._
 import config._
 import net.lag.kestrel.config._
+import com.twitter.kestrelthrift.thrift.KestrelthriftService.ServiceIface
+
+class KestrelthriftService3(val iface: ServiceIface, val protocolFactory: TProtocolFactory) 
+    extends com.twitter.kestrelthrift.thrift.KestrelthriftService.Service(iface, protocolFactory) {
+    
+    override def release() {
+        println("Closed connection")
+    }
+}
 
 
 class KestrelthriftServiceServer2(config: KestrelthriftServiceConfig) extends Service {
@@ -37,9 +46,16 @@ class KestrelthriftServiceServer2(config: KestrelthriftServiceConfig) extends Se
   qs.loadQueues()
 
   def start = {
-    //val thriftImpl = new com.twitter.kestrelthrift.thrift.KestrelthriftService.Service(toThrift, thriftProtocolFactory)
     val serverAddr = new InetSocketAddress(thriftPort)
-    server = ServerBuilder().codec(thriftCodec).name(serverName).reportTo(new OstrichStatsReceiver).bindTo(serverAddr).build(() => new KestrelthriftServiceImpl(qs))
+    server = ServerBuilder().codec(thriftCodec)
+                            .name(serverName)
+                            .reportTo(new OstrichStatsReceiver)
+                            .bindTo(serverAddr).build(() => {
+        //new com.twitter.kestrelthrift.thrift.KestrelthriftService.Service(
+        new KestrelthriftService3(
+        (new KestrelthriftServiceImpl(qs)).toThrift, 
+        thriftProtocolFactory)
+    })
   }
 
   def shutdown = synchronized {
