@@ -17,7 +17,10 @@ struct Item {
 service KestrelthriftService {
   Item get(1: string queue_name, 2: bool transaction = 0)
   list<Item> multiget(1: string queue_name, 2: i32 max_items = 1, 3: bool transaction = 0)
-  void put(1: string queue_name, 2: list<binary> items)
+
+  void put(1: string queue_name, 2: binary item)
+  void multiput(1: string queue_name, 2: list<binary> items)
+
   void ack(1: string queue_name, 2: set<i32> xids)
   void fail(1: string queue_name, 2: set<i32> xids)
   void flush(1: string queue_name)

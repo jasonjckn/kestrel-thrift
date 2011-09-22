@@ -40,7 +40,12 @@ class KestrelthriftServiceImpl(config: KestrelthriftServiceConfig) extends Kestr
     agg.map(seq => seq.filter(_ != null))
   }
 
-  def put(queueName: String, items: Seq[ByteBuffer]) = {
+  def put(queueName: String, item: ByteBuffer) = {
+    qs.add(queueName, item.array)
+    Future.void
+  }
+
+  def multiput(queueName: String, items: Seq[ByteBuffer]) = {
     for(i <- items) 
         qs.add(queueName, i.array)
     Future.void
